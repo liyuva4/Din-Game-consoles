@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>גלריית קונסולות משחק - דין</title>
+  <title>גלריית קונסולות משחק - {% if selected_console %}{{ selected_console }}{% else %}ראשי{% endif %}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap');
 
@@ -16,6 +16,7 @@
       margin: 0;
       padding: 0;
       text-align: center;
+      padding-bottom: 80px; /* מרווח תחתון גדול יותר מגובה ה-contact-bar */
     }
 
     @keyframes gradientShift {
@@ -37,16 +38,48 @@
       margin-bottom: 20px;
     }
 
+    /* סרגל ניווט */
+    .navbar {
+      display: flex;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      padding: 5px 0;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .navbar a {
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+      border-radius: 5px;
+      margin: 0 5px;
+    }
+    .navbar a:hover {
+      background-color: rgba(255,255,255,0.1);
+      color: #00adb5;
+    }
+    .navbar a.active {
+      background: #00adb5;
+      color: #09121f;
+      box-shadow: 0 0 10px rgba(0, 173, 181, 0.7);
+    }
+
     /* כפתור העלאה */
     .upload-area {
       margin: 25px auto;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 550px; /* הורחב כדי להכיל את טופס הניהול */
     }
 
     input[type=file] {
       display: none;
     }
 
-    label.upload-label {
+    label.upload-label, button.manage-button {
       background: #00adb5;
       color: #fff;
       padding: 12px 20px;
@@ -55,12 +88,37 @@
       font-weight: 600;
       transition: 0.3s;
       margin: 5px;
+      display: inline-block;
+      border: none;
+      font-size: 1em;
     }
 
-    label.upload-label:hover {
+    label.upload-label:hover, button.manage-button:hover {
       background: #06c5cd;
       transform: scale(1.04);
     }
+
+    /* סלקט לבחירת קונסולה */
+    select.console-select {
+        padding: 10px;
+        margin: 5px 15px;
+        border-radius: 6px;
+        border: 2px solid #00adb5;
+        background-color: #09121f;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%2300adb5' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px top 50%;
+        background-size: 10px auto;
+    }
+    select.console-select:focus {
+        outline: none;
+        border-color: #ff6b7a;
+    }
+
 
     button.logout {
       background: #ff6b7a;
@@ -71,11 +129,30 @@
       font-weight: 500;
       cursor: pointer;
       transition: 0.3s;
+      margin-top: 10px;
     }
 
     button.logout:hover {
       background: #ff8995;
     }
+
+    /* כפתור מחיקת קונסולה */
+    button.delete-console-button {
+      background: #a94442;
+      color: #fff;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.8em;
+      margin-right: 5px;
+      margin-top: 3px;
+    }
+    button.delete-console-button:hover {
+        background: #cc5c5c;
+    }
+
 
     /* גלריה רספונסיבית */
     .gallery {
@@ -119,6 +196,14 @@
       font-size: 0.9em;
     }
 
+    .item-title {
+        color: #fff;
+        padding: 5px 10px;
+        font-size: 1.1em;
+        font-weight: 600;
+    }
+
+
     form.delete-form {
       margin: 10px 0;
     }
@@ -137,12 +222,22 @@
       opacity: 0.85;
     }
 
+    /* הודעה כשאין תמונות */
+    .empty-message {
+        font-size: 1.3em;
+        margin-top: 50px;
+        color: #00adb5;
+    }
+
     /* רצועת יצירת קשר */
     .contact-bar {
       background: rgba(0,0,0,0.2);
       padding: 20px 10px;
       font-size: 1.1em;
       margin-top: 25px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
     }
 
     .contact-bar span {
@@ -156,40 +251,108 @@
       .subtitle { font-size: 0.95em; }
       .contact-bar { font-size: 0.95em; }
       .item img { aspect-ratio: 16/9; }
+      .navbar a { padding: 8px 10px; }
+      .upload-area { max-width: 90%; }
+      .console-select { margin: 5px 5px; }
+      .manage-console-container input { width: 100%; margin-bottom: 10px; }
+      .manage-console-list form { display: block !important; margin: 5px 0; }
     }
   </style>
 </head>
 <body>
-  <h1>קונסולות משחק מעוצבות</h1>
-  <div class="subtitle">אוסף מיוחד של קונסולות מרהיבות — ניתן להזמין ישירות!</div>
 
-  <!-- הצגת כפתור העלאה רק לאדמין -->
+  <div class="navbar">
+      {% for console in consoles %}
+          <a href="{{ url_for('index', console_name=console) }}"
+             class="{% if console == selected_console %}active{% endif %}">
+              {{ console }}
+          </a>
+      {% endfor %}
+  </div>
+
+  <h1>קונסולות משחק מעוצבות</h1>
+  <div class="subtitle">
+      {% if selected_console %}
+          אוסף מיוחד של קונסולות {{ selected_console }} מרהיבות — ניתן להזמין ישירות!
+      {% else %}
+          אוסף מיוחד של קונסולות מרהיבות — ניתן להזמין ישירות!
+      {% endif %}
+  </div>
+
   {% if current_user.is_authenticated and current_user.username == 'admin' %}
   <div class="upload-area">
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <label for="file" class="upload-label">העלה תמונה</label>
-      <input type="file" id="file" name="file" required onchange="this.form.submit()">
+
+    <h3 style="color: #00adb5;">העלאת תמונה</h3>
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+
+        <label for="console">בחר קונסולה:</label>
+        <select name="console" id="console-select" class="console-select" required>
+            <option value="">בחר קונסולה</option>
+            {% for console in consoles %}
+                <option value="{{ console }}" {% if console == selected_console %}selected{% endif %}>{{ console }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="file" class="upload-label">בחר קובץ</label>
+        <input type="file" id="file" name="file" required onchange="this.form.submit()">
     </form>
-    <form action="/logout" method="get">
+
+    <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
+        <h3 style="color: #00adb5; margin-bottom: 15px;">ניהול קונסולות</h3>
+
+        <form action="{{ url_for('manage_consoles') }}" method="POST" style="display: block; margin-bottom: 15px;">
+            <input type="text" name="console_name" placeholder="שם קונסולה חדשה (Case Sensitive)" required
+                   style="padding: 10px; border-radius: 6px; border: none; width: 60%;">
+            <input type="hidden" name="action" value="add">
+            <button type="submit" class="manage-button" style="padding: 10px 15px; margin: 0; font-weight: 500;">
+                + הוסף
+            </button>
+        </form>
+
+        <div class="manage-console-list" style="max-height: 150px; overflow-y: auto; padding-right: 10px;">
+        {% for console in consoles %}
+            <form action="{{ url_for('manage_consoles') }}" method="POST" style="display: inline-block; margin: 3px 5px;">
+                <span style="font-size: 1.1em; margin-right: 5px;">{{ console }}</span>
+                <input type="hidden" name="console_name" value="{{ console }}">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="delete-console-button"
+                        onclick="return confirm('בטוח שברצונך למחוק את {{ console }} מרשימת הניווט? הקבצים הפיזיים יישארו בתיקייה!')">
+                    X
+                </button>
+            </form>
+        {% endfor %}
+        </div>
+    </div>
+
+    <form action="{{ url_for('logout') }}" method="get" style="margin-top: 25px;">
       <button class="logout">התנתק</button>
     </form>
   </div>
   {% endif %}
 
-  <!-- גלריה -->
   <div class="gallery">
-    {% for num, img in images %}
-      <div class="item">
-        <span class="number">#{{ num }}</span>
-        <img src="{{ url_for('static', filename='uploads/' + img) }}" alt="console">
+    {% if selected_console %}
+        {% for num, image_path in images %}
+        <div class="item">
+          <span class="number">#{{ num }}</span>
+          <img src="{{ url_for('static', filename='uploads/' + image_path) }}" alt="{{ image_path.split('/')[-1] }}">
+          <div class="item-title">{{ image_path.split('/')[-1] }}</div>
 
-        {% if current_user.is_authenticated and current_user.username == 'admin' %}
-        <form method="POST" action="/delete/{{ img }}" class="delete-form">
-          <button type="submit" class="delete-button">מחק</button>
-        </form>
-        {% endif %}
-      </div>
-    {% endfor %}
+          {% if current_user.is_authenticated and current_user.username == 'admin' %}
+          <form method="POST" action="{{ url_for('delete', filepath=image_path) }}" class="delete-form">
+            <button type="submit" class="delete-button" onclick="return confirm('בטוח למחוק את {{ image_path.split('/')[-1] }}?')">מחק</button>
+          </form>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-message">אין תמונות בקונסולת {{ selected_console }} עדיין.</div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-message" style="grid-column: 1 / -1;">
+            אנא בחר קונסולה מהסרגל הניווט למעלה כדי לצפות בגלריה.
+        </div>
+    {% endif %}
   </div>
 
 
@@ -199,7 +362,7 @@
     להזמנות ופרטים נוספים: <span>דין 053-2299500 </span>
 </div>
   {% if not current_user.is_authenticated %}
-  <p style="margin-top: 15px;font-size: small">להעלאה וניהול יש להתחבר כאדמין. <a href="/login" style="color:#00e1ff">עמוד התחברות</a></p>
+  <p style="margin-top: 15px;font-size: small">להעלאה וניהול יש להתחבר כאדמין. <a href="{{ url_for('login') }}" style="color:#00e1ff">עמוד התחברות</a></p>
 
   {% endif %}
   </div>
